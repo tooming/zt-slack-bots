@@ -73,8 +73,8 @@ For seeing status: "/standup status"'];
         $StandupStub->method('executeSql')->willReturn(null);
         $StandupStub->method('getStandupStatus')->will($this->returnValueMap($statusConfigMap));
 
-		$request = ['token' => 'TEST_TOKEN', 'team_id' => 'TEST_TEAM_ID', 'channel_name' => 'TEST_CHANNEL_NAME',
-		'user_name' => 'TEST_USER_NAME', 'user_id' => 'TEST_USER_ID', 'text' => 'status'];
+		$request = ['token' => 'TEST_TOKEN', 'team_id' => 'TEST_TEAM_ID', 'channel_id' => 'TEST_CHANNEL_ID', 
+		'channel_name' => 'TEST_CHANNEL_NAME', 'user_name' => 'TEST_USER_NAME', 'user_id' => 'TEST_USER_ID', 'text' => 'status'];
 		$StandupStub->buildResponse($this->tokens, $request);
 		$expected = ['response_type' => 'in_channel',
 		'text' => "*martin*: my notes
