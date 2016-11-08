@@ -5,7 +5,6 @@ define('DBUSER', 'user');
 define('DBPASS', 'pass');
 define('DBNAME', 'slack');
 
-// verification tokens from slack.com to make sure the request came from Slack
 $tokens = [
 	'token1',
 	'token2'
@@ -38,32 +37,91 @@ $error_message = "Well, we didn't quite get that, @".$user_name.", try this: /st
 
 $data['response_type'] = 'in_channel';
 $pieces = explode(" ", $text);
-$action = isset($pieces[0]) ? $pieces[0] : false;
+$action = isset($pieces[0]) ? trim($pieces[0]) : false;
 $data['text'] = '';
 if($action == 'help') {
 	$data['response_type'] = 'ephemeral';
 	$data['text'] = 'For adding standup notes, use for example: "/standup notes"
 For seeing status: "/standup status"';
 } elseif($action == 'status') {
-	$sql = "SELECT max(ID) as ID, `text`, user_name FROM standups
-	WHERE team_id = ?
-	AND channel_id = ?
-	AND date = CURDATE()
-	GROUP BY user_name
-	ORDER BY ID DESC";
+	$sql = "SELECT * FROM standup_members 
+			RIGHT JOIN standups 
+			ON standups.user_name = standup_members.user_name
+			AND standups.channel_id = standup_members.channel_id
+			WHERE 
+				standup_members.channel_id = ?
+				OR standups.channel_id = ?
+			ORDER BY standups.ID DESC
+";
 	$sth = $db->prepare($sql);
-	$sth->execute(array($team_id, $channel_id));
+	$sth->execute([$channel_id, $channel_id]);
 	$result = $sth->fetchAll(PDO::FETCH_OBJ);
 	if(count($result) > 0) {
+		$rows = 0;
 		foreach($result as $user) {
-			$data['text'] .= '*'.$user->user_name.'*: '.$user->text.'
+			if(!$user->text && $user->status) {
+				$data['text'] .= '*'.$user->user_name.'*: '.$user->status.'
 ';
+				$rows++;
+			} elseif($user->text) {
+				$data['text'] .= '*'.$user->user_name.'*: '.$user->text.'
+';
+				$rows++;
+			}
+			if($rows == 0) {
+				$data['text'] = 'All are lazy as hell! :sadpanda:';
+			}
 		}
 	} else {
 		$data['text'] = 'All are lazy as hell! :sadpanda:';
 	}
 
-} elseif(trim($action) != '') {
+} elseif($action == 'add') {
+	$member_string = trim(str_replace("@", "", str_replace("add", "", $text)));
+	$members = explode(" ", $member_string);
+	foreach($members as $member) {
+		$sql = 'INSERT INTO standup_members (channel_id, channel_name, user_name, added_time)
+			VALUES (?, ?, ?, NOW())';
+		$sth = $db->prepare($sql);
+		$sth->execute(array($channel_id, $channel_name, $member));
+	}
+	$data['text'] = $user_name.' added to this team: '. $member_string;
+} elseif($action == 'remove') {
+	$member_string = trim(str_replace("@", "", str_replace("remove", "", $text)));
+	$members = explode(" ", $member_string);
+	foreach($members as $member) {
+		$sql = 'DELETE FROM standup_members WHERE channel_id = ? AND user_name = ?';
+		$sth = $db->prepare($sql);
+		$sth->execute(array($channel_id, $member));
+	}
+	$data['text'] = $user_name.' removed from this team: '. $member_string;
+} elseif($action == 'members') {
+	$sql = "SELECT user_name FROM standup_members
+	WHERE channel_id = ?
+	GROUP BY user_name";
+	$sth = $db->prepare($sql);
+	$sth->execute([$channel_id]);
+	$result = $sth->fetchAll(PDO::FETCH_OBJ);
+	if(count($result) > 0) {
+		foreach($result as $user) {
+			$data['text'] .= '*'.$user->user_name.'*
+';
+		}
+	} else {
+		$data['text'] = 'No members in the team yet! :sadpanda:';
+	}
+} elseif($action == 'away') {
+	$reason = trim(str_replace("away", "", $text));
+	$sql = "UPDATE standup_members SET status = ? WHERE channel_id = ? AND user_name = ?";
+	$sth = $db->prepare($sql);
+	$sth->execute([$reason, $channel_id, $user_name]);
+	$data['text'] = $user_name .' is now away because: ' . $reason;
+} elseif($action == 'online') {
+	$sql = "UPDATE standup_members SET status = NULL WHERE channel_id = ? AND user_name = ?";
+	$sth = $db->prepare($sql);
+	$sth->execute([$channel_id, $user_name]);
+	$data['text'] = $user_name .' is now back online';
+} elseif($action != '') {
 	$sql = "DELETE FROM standups WHERE team_id = ?
 			AND channel_id = ?
 			AND user_id = ?";
@@ -74,6 +132,7 @@ For seeing status: "/standup status"';
 		VALUES (?, ?, ?, ?, ?, ?, CURDATE(), NOW())';
 	$sth = $db->prepare($sql);
 	$sth->execute(array($team_id, $channel_id, $channel_name, $user_id, $user_name, $text));
+
 	$data['text'] = '@'.$user_name.' notes added!';
 } else {
 	$data['response_type'] = 'ephemeral';
@@ -82,3 +141,5 @@ For seeing status: "/standup status"';
 
 header('Content-Type: application/json');
 echo json_encode($data);
+
+?>
