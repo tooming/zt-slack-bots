@@ -1,14 +1,6 @@
 <?php
 
-define('DBHOST', 'localhost');
-define('DBUSER', 'user');
-define('DBPASS', 'pass');
-define('DBNAME', 'slack');
-
-$tokens = [
-	'token1',
-	'token2'
-];
+include('../config.php');
 
 error_reporting(0);
 ini_set('display_errors', 0);
