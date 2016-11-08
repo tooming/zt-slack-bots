@@ -73,7 +73,8 @@ For setting status to back online: "/standup online"';
 				$data['text'] .= '*'.$user_name.'*: '.$user['text'].'
 ';
 			} else {
-				$data['text'] .= '*'.$user_name.'*: :sadpanda:';
+				$data['text'] .= '*'.$user_name.'*: :sadpanda:
+';
 			}
 		}
 	} else {
