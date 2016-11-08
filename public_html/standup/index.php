@@ -120,15 +120,17 @@ For setting status to back online: "/standup online"';
 	}
 } elseif($action == 'away') {
 	$reason = trim(str_replace("away", "", $text));
-	$sql = "UPDATE standup_members SET status = ? WHERE channel_id = ? AND user_name = ?";
+	$sql = "INSERT INTO standup_members (status, channel_id, channel_name, user_name, added_time) VALUES (?, ?, ?, ?, NOW())
+		ON DUPLICATE KEY UPDATE status=?, channel_id=?, user_name=?, added_time=NOW()";
 	$sth = $db->prepare($sql);
-	$sth->execute([$reason, $channel_id, $user_name]);
+	$sth->execute([$reason, $channel_id, $channel_name, $user_name, $reason, $channel_id, $user_name]);
 	$data['text'] = $user_name .' is now away because: ' . $reason;
 } elseif($action == 'online') {
-	$sql = "UPDATE standup_members SET status = NULL WHERE channel_id = ? AND user_name = ?";
+	$sql = "INSERT INTO standup_members (status, channel_id, channel_name, user_name, added_time) VALUES (NULL, ?, ?, ?, NOW())
+		ON DUPLICATE KEY UPDATE status=NULL, channel_id=?, user_name=?, added_time=NOW()";
 	$sth = $db->prepare($sql);
-	$sth->execute([$channel_id, $user_name]);
-	$data['text'] = $user_name .' is now back online';
+	$sth->execute([$channel_id, $channel_name, $user_name, $channel_id, $user_name]);
+	$data['text'] = $user_name .' is now online';
 } elseif($action != '') {
 	$sql = "DELETE FROM standups WHERE team_id = ?
 			AND channel_id = ?
