@@ -3,7 +3,7 @@
 -- http://www.phpmyadmin.net
 --
 -- Host: localhost
--- Generation Time: Nov 08, 2016 at 01:45 PM
+-- Generation Time: Nov 08, 2016 at 10:05 PM
 -- Server version: 5.5.53-0ubuntu0.14.04.1
 -- PHP Version: 5.5.9-1ubuntu4.20
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `pushups` (
   `count` int(11) NOT NULL,
   `added_time` datetime NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=157 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=158 ;
 
 -- --------------------------------------------------------
 
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `pushup_targets` (
   `target` int(11) NOT NULL,
   `added_time` datetime NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=102 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=103 ;
 
 -- --------------------------------------------------------
 
@@ -69,7 +69,24 @@ CREATE TABLE IF NOT EXISTS `standups` (
   `date` date NOT NULL,
   `added_time` datetime NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=606 ;
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=617 ;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `standup_members`
+--
+
+CREATE TABLE IF NOT EXISTS `standup_members` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `channel_id` varchar(16) DEFAULT NULL,
+  `channel_name` varchar(64) DEFAULT NULL,
+  `user_name` varchar(32) DEFAULT NULL,
+  `added_time` datetime DEFAULT NULL,
+  `status` varchar(32) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_standup_member` (`channel_id`,`user_name`)
+) ENGINE=InnoDB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=57 ;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
