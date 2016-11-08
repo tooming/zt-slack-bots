@@ -44,27 +44,38 @@ if($action == 'help') {
 	$data['text'] = 'For adding standup notes, use for example: "/standup notes"
 For seeing status: "/standup status"';
 } elseif($action == 'status') {
-	$sql = "SELECT * FROM standup_members 
-			RIGHT JOIN standups 
-			ON standups.user_name = standup_members.user_name
-			AND standups.channel_id = standup_members.channel_id
+	$sql = "SELECT sm.user_name as sm_user_name, s.user_name as s_user_name, status, text
+			FROM standup_members sm 
+			LEFT JOIN standups s
+			ON s.user_name = sm.user_name
+			AND s.channel_id = sm.channel_id
 			WHERE 
-				standup_members.channel_id = ?
-				OR standups.channel_id = ?
-			ORDER BY standups.ID DESC
+				sm.channel_id = ?
+				OR s.channel_id = ?
+		UNION
+			SELECT sm.user_name as sm_user_name, s.user_name as s_user_name, status, text
+			FROM standup_members sm 
+			RIGHT JOIN standups s
+			ON s.user_name = sm.user_name
+			AND s.channel_id = sm.channel_id
+			WHERE 
+				sm.channel_id = ?
+				OR s.channel_id = ?
+
 ";
 	$sth = $db->prepare($sql);
-	$sth->execute([$channel_id, $channel_id]);
-	$result = $sth->fetchAll(PDO::FETCH_OBJ);
+	$sth->execute([$channel_id, $channel_id, $channel_id, $channel_id]);
+	$result = $sth->fetchAll(PDO::FETCH_ASSOC);
 	if(count($result) > 0) {
 		$rows = 0;
 		foreach($result as $user) {
-			if(!$user->text && $user->status) {
-				$data['text'] .= '*'.$user->user_name.'*: '.$user->status.'
+			$user_name = ($user['sm_user_name'])?$user['sm_user_name']:$user['s_user_name'];
+			if($user['status']) {
+				$data['text'] .= '*'.$user_name.'*: '.$user['status'].'
 ';
 				$rows++;
-			} elseif($user->text) {
-				$data['text'] .= '*'.$user->user_name.'*: '.$user->text.'
+			} elseif($user['text']) {
+				$data['text'] .= '*'.$user_name.'*: '.$user['text'].'
 ';
 				$rows++;
 			}
@@ -96,7 +107,7 @@ For seeing status: "/standup status"';
 	}
 	$data['text'] = $user_name.' removed from this team: '. $member_string;
 } elseif($action == 'members') {
-	$sql = "SELECT user_name FROM standup_members
+	$sql = "SELECT user_name, status FROM standup_members
 	WHERE channel_id = ?
 	GROUP BY user_name";
 	$sth = $db->prepare($sql);
@@ -104,7 +115,7 @@ For seeing status: "/standup status"';
 	$result = $sth->fetchAll(PDO::FETCH_OBJ);
 	if(count($result) > 0) {
 		foreach($result as $user) {
-			$data['text'] .= '*'.$user->user_name.'*
+			$data['text'] .= '*'.$user->user_name.'*'.(($user->status)?': '.$user->status:'').'
 ';
 		}
 	} else {
