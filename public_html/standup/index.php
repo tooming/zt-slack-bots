@@ -34,7 +34,12 @@ $data['text'] = '';
 if($action == 'help') {
 	$data['response_type'] = 'ephemeral';
 	$data['text'] = 'For adding standup notes, use for example: "/standup notes"
-For seeing status: "/standup status"';
+For seeing status: "/standup status"
+For adding team members: "/standup add name1 name2"
+For removing team members: "/standup remove name1 name2"
+For seeing member list: "/standup members"
+For setting status to away with reason "on vacation": "/standup away on vacation"
+For setting status to back online: "/standup online"';
 } elseif($action == 'status') {
 	$sql = "SELECT sm.user_name as sm_user_name, s.user_name as s_user_name, status, text
 			FROM standup_members sm 
