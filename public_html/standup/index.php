@@ -64,20 +64,16 @@ For setting status to back online: "/standup online"';
 	$sth->execute([$channel_id, $channel_id, $channel_id, $channel_id]);
 	$result = $sth->fetchAll(PDO::FETCH_ASSOC);
 	if(count($result) > 0) {
-		$rows = 0;
 		foreach($result as $user) {
 			$user_name = ($user['sm_user_name'])?$user['sm_user_name']:$user['s_user_name'];
 			if($user['status']) {
 				$data['text'] .= '*'.$user_name.'*: '.$user['status'].'
 ';
-				$rows++;
 			} elseif($user['text']) {
 				$data['text'] .= '*'.$user_name.'*: '.$user['text'].'
 ';
-				$rows++;
-			}
-			if($rows == 0) {
-				$data['text'] = 'All are lazy as hell! :sadpanda:';
+			} else {
+				$data['text'] .= '*'.$user_name.'*: :sadpanda:';
 			}
 		}
 	} else {
