@@ -70,7 +70,7 @@ For setting status to back online: "/standup online"';
 			if($user['status']) {
 				$data['text'] .= '*'.$user_name.'*: '.$user['status'].'
 ';
-			} elseif($user['text']) {
+			} elseif($user['text'] && $user['s_date']==date('Y-m-d')) {
 				$data['text'] .= '*'.$user_name.'*: '.$user['text'].'
 ';
 			} else {
