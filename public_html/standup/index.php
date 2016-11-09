@@ -41,23 +41,24 @@ For seeing member list: "/standup members"
 For setting status to away with reason "on vacation": "/standup away on vacation"
 For setting status to back online: "/standup online"';
 } elseif($action == 'status') {
-	$sql = "SELECT sm.user_name as sm_user_name, s.user_name as s_user_name, status, text
+	$sql = "SELECT sm.user_name as sm_user_name, s.user_name as s_user_name, status, text, s.date as s_date
 			FROM standup_members sm 
 			LEFT JOIN standups s
 			ON s.user_name = sm.user_name
 			AND s.channel_id = sm.channel_id
 			WHERE 
-				sm.channel_id = ?
-				OR s.channel_id = ?
+				(sm.channel_id = ?
+				OR s.channel_id = ?)
 		UNION
-			SELECT sm.user_name as sm_user_name, s.user_name as s_user_name, status, text
+			SELECT sm.user_name as sm_user_name, s.user_name as s_user_name, status, text, s.date as s_date
 			FROM standup_members sm 
 			RIGHT JOIN standups s
 			ON s.user_name = sm.user_name
 			AND s.channel_id = sm.channel_id
 			WHERE 
-				sm.channel_id = ?
-				OR s.channel_id = ?
+				(sm.channel_id = ?
+				OR s.channel_id = ?)
+				AND s.date = CURDATE()
 
 ";
 	$sth = $db->prepare($sql);
